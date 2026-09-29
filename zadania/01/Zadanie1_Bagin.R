@@ -6,7 +6,7 @@ knitr::opts_chunk$set(
 )
 #'
 library(palmerpenguins)
-View(penguins)
+if (interactive()) utils::View(penguins)
 
 # funkcia na zobrazovanie grafov podla skupin
 grafy_podla_skupin <- function(data = NULL, stlpec = NULL, podla = NULL,
@@ -199,11 +199,11 @@ head(data)
 summary(data)
 colSums(is.na(data))
 mice::md.pattern(data)
-#' pri 2 riadkoch chyba az 5 hodnot a pri 9 riadkoch chyba hodnota v stlpci pohlavia
+#' z 344 zaznamov je 333 uplnych, pri 2 riadkoch chyba az 5 hodnot a pri 9 riadkoch chyba iba pohlavie.
 Amelia::missmap(data)
 
 
-#' dropnutie riadkov s prazdnymi hodnotami
+#' vyradenych je 11 riadkov s chybajucimi hodnotami
 clean_data <- na.omit(data)
 
 clean_data$bill_len <- clean_data$bill_length_mm
@@ -232,7 +232,7 @@ sd(clean_data$bill_len)
 #' typicka dlzka zobaka je problizne 44mm, median je 44.5mm co znamena ze polovica tucniakov ma zobak kratsi ako median
 #' polovica merani (1. a 3. kvantil - medzi 25% a 75% meranymi dat) lezi medzi 39.5mm a 48.6mm, sirka medzi kvartiloveho rozdielu je 9.1mm
 #' najkratsi zobak meral 32.1mm a najdlhsi 59.6mm, smerodajna odchylka je 5.47mm
-#' graf hustoty vsak ukazuje dva vrcholy, co naznacuje dve skupiny tucniakov
+#' graf hustoty ma dva vrcholy, kedze su v datach tri druhy, tento tvar moze vznikat ich zmiesanim
 
 qqnorm(clean_data$bill_len)
 qqline(clean_data$bill_len)
@@ -241,7 +241,7 @@ vioplot::vioplot(clean_data$bill_len)
 
 moments::skewness(clean_data$bill_len)
 moments::kurtosis(clean_data$bill_len)
-#' rozdelenie je celkovo symetricke, comu zodpoveda sikmost 0.045
+#' suhrnne rozdelenie je priblizne symetricke, comu zodpoveda sikmost 0.045
 
 #' merane su roky 2007 az 2009
 
@@ -269,21 +269,23 @@ popisne_statistiky(clean_data, stlpec = "bill_len", podla = "island")
 #'### podla pohlavia
 grafy_podla_skupin(clean_data, stlpec = "bill_len", podla = "sex", nazov_hodnoty = "dlzka zobaka (mm)", nazov_skupiny = "pohlavie")
 popisne_statistiky(clean_data, stlpec = "bill_len", podla = "sex")
-#' samci tucniaky maju vacsi rozptyl rozdelenia dlzok zobaka, var = 28.8mm
-#' samci maju maximum dlzky zobaka vacsiu o 1mm
+#' samci maju vacsi rozptyl dlzky zobaka 28.8 oproti 24.0 mm u samic
+#' maximum dlzky zobaka je u samcov 59.6 mm a u samic 58.0 mm
 #' najcastejsie vyskytujuca sa hodnota u samiciek je 46.5mm a u samcov 41.1mm (moze to byt aj z dovodu viacej merani u jedneho druhu alebo ostrova)
 #' median samcov je 46.8mm a samiciek 42.8mm, kde aj priemer blizko zasahuje: samci 45.9mm a samicky 42.1mm
 #' samci maju priemerne dlhsie zobaky, kde maju aj vacsi rozptyl
 
 grafy_podla_skupin(clean_data, stlpec = "bill_len", podla = "sex+island", nazov_hodnoty = "dlzka zobaka (mm)")
-grafy_podla_skupin(clean_data, stlpec = "bill_len", podla = "island+species", nazov_hodnoty = "dlzka zobaka (mm)", nazov_skupiny = "pohlavie")
-#' tucniaky druhu Adelie maju vzajomnu korelaciu na ostrovoch Biscoe a Dream, avsak tucniaky rovnakeho druhu na ostrove Torgersen nemaju prekryv rocnakych hodnot
+grafy_podla_skupin(clean_data, stlpec = "bill_len", podla = "island+species", nazov_hodnoty = "dlzka zobaka (mm)", nazov_skupiny = "ostrov a druh")
+#' rozdelenia dlzky zobaka sa medzi ostrovmi prekryvaju, treba brat do uvahy aj zastupenie druhov: 
+#' na ostrove torgersen je iba adelie, zatial co na ostrove biscoe prevlada gentoo
 adelie <- subset(clean_data, species == "Adelie")
 table(
   ostrov = factor(adelie$island, levels = c("Dream", "Biscoe", "Torgersen")),
   pohlavie = adelie$sex
 )
 #' vzorky su rovnomerne rozlozene medzi pohlaviami
+
 
 
 #'
@@ -298,29 +300,39 @@ grafy_podla_skupin(clean_data, stlpec = "bill_dep")
 grafy_podla_skupin(clean_data, stlpec = "bill_dep", podla = "sex+island")
 popisne_statistiky(clean_data, stlpec = "bill_dep", podla = "sex")
 popisne_statistiky(clean_data, stlpec = "bill_dep", podla = "island")
-#' najmensi rozptyl maju tucniaky oboch pohlavy na ostrove Dream
+#' najmensi rozptyl hlbky zobaka je na ostrove Dream 1.29, na Torgersene je 1.81 a na Biscoe 3.34, za obe pohlavia spolu
 #' medzi tucniakov, ktore maju najhlbsie zobaky su samci z ostrovov Dream a Torgersen
 
 #'
 #'### podla druhu
 grafy_podla_skupin(clean_data, stlpec = "bill_dep", podla = "species")
 popisne_statistiky(clean_data, stlpec = "bill_dep", podla = "species")
-#' najhlbsie zobaky maju maju druhy Adelie a Chinstrap, Adelie maju avsak vacsi rozptyl 1.49mm, avsak Chinstrap maju najvacsi IQR 1.9mm
+#' najhlbsie zobaky maju druhy Adelie a Chinstrap, Adelie ma vacsi rozptyl 1.49 a Chinstrap najvacsi IQR 1.9mm.
 #' Adelie a Chinstrap maju takmer zhodny priemer okolo 18.4mm
 #' druh Gentoo patri k druhom s mensiou hlbkou, kde priemerna hodnota je 15mm a median 15mm s rovnakym modusom
 
 #'
 #'## korelacia hlbky zobaka a dlzky podla pohlavia
+#'obe pohlavia naraz pre scatter plot korelacie
+farby_druhov <- viridisLite::viridis(nlevels(clean_data$species), alpha = 0.65)
+plot(clean_data$bill_len, clean_data$bill_dep,
+     col = farby_druhov[clean_data$species], pch = 16, 
+     xlab = "dlzka zobaka (mm)", ylab = "hlbka zobaka (mm)", main = "dlzka a hlbka zobaka podla druhu")
+
+legend("topright", legend = tolower(levels(clean_data$species)),
+       col = farby_druhov, pch = 16, bty = "n")
+
 podla_pohlavia <- split(clean_data, clean_data$sex)
 cor(podla_pohlavia$female$bill_len, podla_pohlavia$female$bill_dep)
 cor(podla_pohlavia$male$bill_len, podla_pohlavia$male$bill_dep)
-#' zaporne cisla, tendencia dlhsi zobak mensia hlbka
+#' pri spojeni druhov je korelacia zaporna, samice -0.43 a samci -0.40
+#' rozdiely medzi druhmi mozu tento smer vztahu ovplyvnit.
 
 adelie_samice <- podla_pohlavia$female[podla_pohlavia$female$species == "Adelie",]
 cor(adelie_samice$bill_len, adelie_samice$bill_dep)
 adelie_samce <- podla_pohlavia$male[podla_pohlavia$male$species == "Adelie",]
 cor(adelie_samce$bill_len, adelie_samce$bill_dep)
-#' u samcov druhu Adelie nie je ziadny vyznamny vztah medzi dlzkou a hlbkou
+#' u samcov druhu adelie je korelacia blizka nule -0.04, u samic je 0.16
 
 chinstrap_samice <- podla_pohlavia$female[podla_pohlavia$female$species == "Chinstrap",]
 cor(chinstrap_samice$bill_len, chinstrap_samice$bill_dep)
@@ -333,7 +345,9 @@ gentoo_samice <- podla_pohlavia$female[podla_pohlavia$female$species == "Gentoo"
 cor(gentoo_samice$bill_len, gentoo_samice$bill_dep)
 gentoo_samce <- podla_pohlavia$male[podla_pohlavia$male$species == "Gentoo",]
 cor(gentoo_samce$bill_len, gentoo_samce$bill_dep)
-#' u samiciek je silnejsia korelacia 0.43 medzi dlzkou a hlbkou, cim dlhsi zobak tym hlbsi
+#' u samic druhu Gentoo je korelacia medzi dlzkou a hlbkou zobaka 0.43 a u samcov 0.31, v tejto skupine sa dlhsie zobaky spajaju s vacsou hlbkou
+#' 
+#' po rozdeleni podla druhu je korelacia vacsinou kladna, zatial co pri spojeni druhov je zaporna
 
 
 
@@ -351,14 +365,18 @@ grafy_podla_skupin(clean_data, stlpec = "flipper_len", podla = "sex+island")
 popisne_statistiky(clean_data, stlpec = "flipper_len", podla = "sex")
 popisne_statistiky(clean_data, stlpec = "flipper_len", podla = "island")
 #' najmensi rozptyl maju tucniaky na ostrove Torgersen, kde su aj 3 vychylky
-#' medzi tucniakov, ktore maju najhlbsie plutvy a aj rozptyl su tucniaky z ostrova Biscoe
+
+grafy_podla_skupin(clean_data, stlpec = "flipper_len", podla = "island+species")
+popisne_statistiky(clean_data, stlpec = "flipper_len", podla = "island+species")
+#' najdlhsie plutvy a najvacsi rozptyl ich dlzky su na ostrove Biscoe
+#' na tomto ostrove vsak prevlada druh Gentoo, ktory ma celkovo dlhsie plutvy
 
 #'
 #'### podla druhu
 grafy_podla_skupin(clean_data, stlpec = "flipper_len", podla = "sex+species")
 popisne_statistiky(clean_data, stlpec = "flipper_len", podla = "species")
 #' najdlhsie plutvy maju tucniaky druhu Gentoo, kde je aj najvacsia priemerna hodnota 217.24mm s medianom 216 (obe pohlavia)
-#' smerodajna odchylka je 6.59mm, is IQR 9.5, kde 3ti kvantil ma hodnotu 221 a prvy 212 pri Gentoo druhu
+#' pri druhu Gentoo je smerodajna odchylka 6.59mm a IQR 9.5, prvy kvartil je 212mm a treti 221.5mm
 
 
 
@@ -385,11 +403,20 @@ popisne_statistiky(clean_data, stlpec = "body_mass", podla = "sex+species")
 #' v priemere (5484.8g a 4679.7g) su najtazsie tucniaky druhu Gentoo, kde maju najvyssi median pre samca 5500g a pre samicku 4700g
 #' najvacsie IQR maju samci Adelie 500, samicky Gentoo 412.5
 
+
 #'
-#'## korelacia vaha tela a dlzka plutvy
+#'## korelacia hmotnosti tela a dlzky plutvy
+plot(clean_data$flipper_len, clean_data$body_mass,
+     col = farby_druhov[clean_data$species], pch = 16,
+     xlab = "dlzka plutvy (mm)", ylab = "hmotnost tela (g)", main = "dlzka plutvy a hmotnost podla druhu")
+
+legend("topleft", legend = tolower(levels(clean_data$species)),
+       col = farby_druhov, pch = 16, bty = "n")
+
 cor(podla_pohlavia$female$body_mass, podla_pohlavia$female$flipper_len)
 cor(podla_pohlavia$male$body_mass, podla_pohlavia$male$flipper_len)
-#' corelacia je velmi silna medzi dlzkou plutvy a vahou (0.88 samice a 0.87 samci)
+#' pri spojenych druhoch je korelacia medzi dlzkou plutvy a hmotnostou silna, 0.88 u samic a 0.87 u samcov
+#'  cast tohto vztahu mozu tvorit rozdiely medzi druhmi
 
 
 cor(adelie_samice$body_mass, adelie_samice$flipper_len)
@@ -398,9 +425,9 @@ cor(adelie_samce$body_mass, adelie_samce$flipper_len)
 
 cor(chinstrap_samice$body_mass, chinstrap_samice$flipper_len)
 cor(chinstrap_samce$body_mass, chinstrap_samce$flipper_len)
-#' najsilnejsia korelacia je u samcov druhu Chinstrap kde je 0.66
+#' spomedzi sestich skupin podla druhu a pohlavia je najsilnejsia korelacia u samcov druhu Chinstrap 0.66
 
 
 cor(gentoo_samice$body_mass, gentoo_samice$flipper_len)
 cor(gentoo_samce$body_mass, gentoo_samce$flipper_len)
-#' u samiciek je silnejsia korelacia 0.49 medzi vahou a dlzkou plutvy
+#' u druhu Gentoo je korelacia medzi hmotnostou a dlzkou plutvy silnejsia u samic 0.49 ako u samcov 0.33
