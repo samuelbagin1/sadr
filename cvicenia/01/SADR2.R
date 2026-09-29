@@ -9,7 +9,6 @@ library(readxl)
 data <- readxl::read_xlsx("data/data_vyuka.xlsx")
 str(data)
 head(data)
-View(data)
 
 # chybajuce data
 # kniznice: mice, Amelia
@@ -28,14 +27,13 @@ str(new_data)
 
 
 # vhodne knzinice pre EDA
-install.packages(psych)
-install.packages(Hmisc)
-install.packages(FSA)
-install.packages(pastecs)
-install.packages(moments)
-install.packages(mosaic)
-install.packages(ie2misc) # MAD
-install.packages(modest) # modus
+#install.packages(Hmisc)
+#install.packages(FSA)
+#install.packages(pastecs)
+#install.packages(moments)
+#install.packages(mosaic)
+#install.packages(ie2misc) # MAD
+#install.packages(modest) # modus
 
 library(psych)
 library(Hmisc)
@@ -45,6 +43,7 @@ library(moments)
 library(mosaic)
 library(ie2misc) # MAD
 library(modest) # modus
+library(statip)
 
 # charakteristiky polohy
 # urcime charakteristiky polohy pre stlpec mprij, novy nazov plat
